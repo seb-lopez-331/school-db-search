@@ -1,5 +1,4 @@
 import csv, time, itertools
-import json
 
 def load_csv(filename, encoding='Windows-1252'):
     """This function loads data from an inputted CSV file with the specified encoding,
@@ -48,7 +47,20 @@ def load_csv(filename, encoding='Windows-1252'):
             print(f'Column names: {column_names}')
             
             # Construct entry objects that map column_name -> value
-            # e.g. {"NCESSCH" : 010000200277, ...}
+            # Below is an example:
+            # {
+            #     "NCESSCH": "010000200277",
+            #     "LEAID": "0100002",
+            #     "LEANM05": "ALABAMA YOUTH SERVICES",
+            #     "SCHNAM05": "SEQUOYAH SCHOOL - CHALKVILLE CAMPUS",
+            #     "LCITY05": "PINSON",
+            #     "LSTATE05": "AL",
+            #     "LATCOD": "33.674697",
+            #     "LONCOD": "-86.627775",
+            #     "MLOCALE": "3",
+            #     "ULOCALE": "41",
+            #     "status05": "1"
+            # }
             try:
                 for line, row in enumerate(csv_reader):
                     print(f'Parsing row {line}')
@@ -73,4 +85,3 @@ def load_csv(filename, encoding='Windows-1252'):
 
 
 loaded_data = load_csv("school_data.csv")
-print(json.dumps(loaded_data[0], indent=4))
