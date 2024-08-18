@@ -292,9 +292,84 @@ def count_schools_for_each_state(
     return count_schools_in_state
 
 
+def count_schools_for_each_metro_centric_locale(
+    data: list[dict[str, any]], column_names: set[str], school_name_column: str, metro_centric_locale_column: str
+) -> dict[str, int]:
+    """This function will count the total amount of schools in each Metro-centric locale.
+
+    This function makes assertions on whether the data passed in follows the proper schema. And then it
+    gathers all of the distinct schools for each state, specified by the school_name_column and 
+    metro_centric_locale_column arguments, within an auxillary dict named distinct_schools_in_metro_locale. The 
+    function finally iterates through distinct_schools_in_metro_locale, counting the number of distinct schools for 
+    each Metro-centric locale and saving that information in the dict that will be returned.
+
+    Parameters
+    ----------
+    data: list[dict]
+        A list of dicts that is supposed to represent each row in the school_data.csv file.
+    column_names: set[str]
+        A set of strings that is supposed to represent each column in the data object. This is used to verify whether
+        each line in the data is consistent.
+    school_name_column: str
+        The column that represents the name of the school.
+    metro_centric_locale_column:
+        The column that represents the Metro-centric locale.
+    
+
+    Returns
+    -------
+    dict[str, int]:
+        A dict that maps the Metro-centric locale to the number of schools within it.
+    """
+    if school_name_column not in column_names:
+        print(f'Error counting schools for each state: column {school_name_column} not found in inputted columns {column_names}.')
+        exit(1)
+    
+    if metro_centric_locale_column not in column_names:
+        print(f'Error counting schools: column {metro_centric_locale_column} not found in inputted columns {column_names}.')
+        exit(1)
+    
+    distinct_schools_in_metro_locale = dict()
+    column_set = set(column_names)
+
+    for line, entry in enumerate(data):
+        # Check here if all the required keys in the schema are present
+        if column_set != entry.keys():
+            key_list = list(entry.keys())
+            diff = list(entry.keys() ^ column_set)
+            print(
+                f'Error counting schools: Entry #{line} has keys {key_list} when the expected keys are '
+                f'{column_names}.\n'
+                f'Here is a diff for ease of reference: {diff}.'
+            )
+            exit(1)
+        
+        school = entry[school_name_column]
+        metro_centric_locale = entry[metro_centric_locale_column]
+        
+        if metro_centric_locale not in distinct_schools_in_metro_locale:
+            distinct_schools_in_metro_locale[metro_centric_locale] = set()
+        distinct_schools_in_metro_locale[metro_centric_locale].add(school)
+
+    count_schools_in_metro_locale = dict()
+    for metro_centric_locale, schools in distinct_schools_in_metro_locale.items():
+        count_schools_in_metro_locale[metro_centric_locale] = len(schools)
+    
+    return count_schools_in_metro_locale
+
+
 loaded_data, column_names = load_csv("school_data.csv")
 num_schools = count_schools(loaded_data, column_names, 'SCHNAM05')
 num_schools_per_state = count_schools_for_each_state(loaded_data, column_names, school_name_column='SCHNAM05', state_column='LSTATE05')
+num_schools_per_metro_centric_locale = count_schools_for_each_metro_centric_locale(loaded_data, column_names, school_name_column='SCHNAM05', metro_centric_locale_column='MLOCALE')
+
 print(f'Total number of schools: {num_schools}')
+print()
+
 for state, count in num_schools_per_state.items():
     print(f'Total number of schools in {state}: {count}')
+print()
+
+for metro_centric_locale, count in num_schools_per_metro_centric_locale.items():
+    print(f'Total number of schools in Metro-centric locale {metro_centric_locale}: {count}')
+print()
