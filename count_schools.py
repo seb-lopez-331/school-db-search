@@ -475,26 +475,36 @@ def count_cities_with_at_least_one_school(
     return len(cities_with_schools)
     
 
-loaded_data, column_names = load_csv("school_data.csv")
+def print_counts() -> None:
+    """A method that prints counts for a bunch of different queries in the school_data.csv file.
 
-num_schools = count_schools(loaded_data, column_names, 'SCHNAM05')
-num_schools_per_state = count_schools_for_each_state(loaded_data, column_names, school_name_column='SCHNAM05', state_column='LSTATE05')
-num_schools_per_metro_centric_locale = count_schools_for_each_metro_centric_locale(loaded_data, column_names, school_name_column='SCHNAM05', metro_centric_locale_column='MLOCALE')
-max_city, num_schools_in_max_city = find_city_with_max_schools(loaded_data, column_names, school_name_column='SCHNAM05', city_column='LCITY05')
-num_cities_with_schools = count_cities_with_at_least_one_school(loaded_data, column_names, school_name_column='SCHNAM05', city_column='LCITY05')
+    This method prints outputs for the following queries:
+    1. Total number of schools in the data set.
+    2. Total number of schools in each state.
+    3. Total number of schools in each Metro-centric locale.
+    4. The city with the most schools in it, along with the number of schools in that city.
+    5. The number of unique cities that have at least one school in it.
+    """
+    loaded_data, column_names = load_csv("school_data.csv")
 
-print(f'Total number of schools: {num_schools}.')
-print()
+    num_schools = count_schools(loaded_data, column_names, 'SCHNAM05')
+    num_schools_per_state = count_schools_for_each_state(loaded_data, column_names, school_name_column='SCHNAM05', state_column='LSTATE05')
+    num_schools_per_metro_centric_locale = count_schools_for_each_metro_centric_locale(loaded_data, column_names, school_name_column='SCHNAM05', metro_centric_locale_column='MLOCALE')
+    max_city, num_schools_in_max_city = find_city_with_max_schools(loaded_data, column_names, school_name_column='SCHNAM05', city_column='LCITY05')
+    num_cities_with_schools = count_cities_with_at_least_one_school(loaded_data, column_names, school_name_column='SCHNAM05', city_column='LCITY05')
 
-for state, count in num_schools_per_state.items():
-    print(f'Total number of schools in {state}: {count}.')
-print()
+    print(f'Total number of schools: {num_schools}.')
+    print()
 
-for metro_centric_locale, count in num_schools_per_metro_centric_locale.items():
-    print(f'Total number of schools in Metro-centric locale {metro_centric_locale}: {count}.')
-print()
+    for state, count in num_schools_per_state.items():
+        print(f'Total number of schools in {state}: {count}.')
+    print()
 
-print(f'City {max_city} has the most schools at {num_schools_in_max_city}.')
-print()
+    for metro_centric_locale, count in num_schools_per_metro_centric_locale.items():
+        print(f'Total number of schools in Metro-centric locale {metro_centric_locale}: {count}.')
+    print()
 
-print(f'There are {num_cities_with_schools} cities with schools.')
+    print(f'City {max_city} has the most schools at {num_schools_in_max_city}.')
+    print()
+
+    print(f'There are {num_cities_with_schools} cities with schools.')
