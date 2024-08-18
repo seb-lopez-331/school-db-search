@@ -4,17 +4,17 @@ Here is a layout of the records stored in school_data.csv
 
 Variable    Start       End         Field    Data 
 Name        Position    Position    Length   Type    Description      
-NCESSCH      01         12          12       AN      ID assigned by NCES to each school. 
-LEAID        13         19           7       AN      Unique Agency ID (NCES assigned) 
-LEANM05      20         79          60       AN      Name of Operating Agency 
-SCHNAM05     80         129         50       AN      School Name 
-LCITY05     130         159         30       AN      Location City Name 
-LSTATE05    160         161          2       AN      Location USPS State Abbreviation 
-LATCOD      162         170          9        N      Latitude 
-LONCOD      171         181         11        N      Longitude 
-MLOCALE     182         182          1       AN      Metro-centric locale code:
-ULOCALE     183         184          2       AN      Urban-centric locale code:
-STATUS05    185         185          1       AN      NCES code for the school status 
+NCESSCH           01          12        12     AN    ID assigned by NCES to each school. 
+LEAID             13          19         7     AN    Unique Agency ID (NCES assigned) 
+LEANM05           20          79        60     AN    Name of Operating Agency 
+SCHNAM05          80         129        50     AN    School Name 
+LCITY05          130         159        30     AN    Location City Name 
+LSTATE05         160         161         2     AN    Location USPS State Abbreviation 
+LATCOD           162         170         9      N    Latitude 
+LONCOD           171         181        11      N    Longitude 
+MLOCALE          182         182         1     AN    Metro-centric locale code:
+ULOCALE          183         184         2     AN    Urban-centric locale code:
+STATUS05         185         185         1     AN    NCES code for the school status 
 
 
 Here is a breakdown of MLOCALE:
@@ -93,7 +93,7 @@ Finally, here is a breakdown for STATUS05
 8 = School was closed on previous year's file but has reopened. 
 """
 
-def load_csv(filename: str, encoding: str = 'Windows-1252') -> tuple[list[dict[str[any]]], set[str]]:
+def load_csv(filename: str, encoding: str = 'Windows-1252') -> tuple[list[dict[str, any]], set[str]]:
     """This function loads data from an inputted CSV file with the specified encoding, defaulted to Windows-1252.
 
     If the file does not exist or if there are any errors associated with loading the data, we exit from the script 
@@ -137,7 +137,7 @@ def load_csv(filename: str, encoding: str = 'Windows-1252') -> tuple[list[dict[s
             print(f'File {filename} opened successfully')
 
             # Gather a list with the column names
-            schema = next(csv_reader)
+            column_names = next(csv_reader)
             
             # Construct entry objects that map column_name -> value
             # Below is an example:
@@ -157,7 +157,7 @@ def load_csv(filename: str, encoding: str = 'Windows-1252') -> tuple[list[dict[s
             try:
                 for line, row in enumerate(csv_reader):
                     entry = {}
-                    for j, name in enumerate(schema):
+                    for j, name in enumerate(column_names):
                         entry[name] = row[j]
                     loaded_data.append(entry)
 
@@ -169,14 +169,14 @@ def load_csv(filename: str, encoding: str = 'Windows-1252') -> tuple[list[dict[s
                 print(f'Error parsing data file on line {line}. This is likely due to mismatched numbers of columns on a row with the schema: {e}')
                 exit(1)
 
-    except Exception as e:
+    except FileNotFoundError | PermissionError | OSError as e:
         print(f'Error loading file: {e}')
         exit(1)
     
-    return loaded_data, set(schema)
+    return loaded_data, set(column_names)
 
 
-def count_schools(data: list[dict[str, any]], schema: set[str]) -> int:
+def count_schools(data: list[dict[str, any]], column_names: set[str]) -> int:
     """This function will count the total schools in the provided loaded data.
 
     Firstly, this function makes assertions on whether the data passed in follows the proper schema. And then it
@@ -192,9 +192,21 @@ def count_schools(data: list[dict[str, any]], schema: set[str]) -> int:
     int:
         The number of schools that the dataset has.
     """
+    distinct_schools = set()
+
+    for line, entry in enumerate(data):
+        # Check here if all the required keys in the schema are present
+        if not column_names <= entry.keys():
+            missing_keys = column_names - entry.keys()
+            print(f'Error counting schools: Entry {entry} in line {line} is missing the required keys: {missing_keys}.')
+            exit(1)
+        
+        school = entry['SCHNAM05']
+        distinct_schools.add(school)
     
+    return len(distinct_schools)
+        
 
-    
-
-
-loaded_data = load_csv("school_data.csv")
+loaded_data, schema = load_csv("school_data.csv")
+num_schools = count_schools(loaded_data, schema)
+print(num_schools)
