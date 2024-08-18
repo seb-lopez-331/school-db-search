@@ -88,3 +88,38 @@ def load_csv(
     
     print(f'Loaded data in {filename} successfully.')
     return loaded_data, column_names
+
+
+def find_distinct(data: dict[str, any], column_names: list[str], column: str) -> list[str]:
+    if column not in column_names:
+        print(f'Error counting schools: column {column} not found in inputted columns {column_names}.')
+        exit(1)
+    
+    distinct = set()
+    column_set = set(column_names)
+
+    for line, entry in enumerate(data):
+        # Check here if all the required keys in the schema are present
+        if column_set != entry.keys():
+            key_list = list(entry.keys())
+            diff = list(entry.keys() ^ column_set)
+            print(
+                f'Error counting schools: Entry #{line} has keys {key_list} when the expected keys are '
+                f'{column_names}.\n'
+                f'Here is a diff for ease of reference: {diff}.'
+            )
+            exit(1)
+        
+        distinct.add(entry[column])
+
+    return distinct
+
+loaded_data, column_names = load_csv("school_data.csv")
+SCHOOL_NAME_COLUMN = 'SCHNAM05'
+CITY_COLUMN = 'LCITY05'
+STATE_COLUMN = 'LSTATE05'
+
+
+distinct_schools = find_distinct(loaded_data, column_names, column=)
+distinct_cities = find_distinct(loaded_data, column_names, column=)
+

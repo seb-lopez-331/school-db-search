@@ -478,14 +478,42 @@ def print_counts() -> None:
     4. The city with the most schools in it, along with the number of schools in that city.
     5. The number of unique cities that have at least one school in it.
     """
+    SCHOOL_NAME_COLUMN = 'SCHNAM05'
+    STATE_COLUMN = 'LSTATE05'
+    CITY_COLUMN = 'LCITY05'
+    METRO_CENTRIC_LOCALE_COLUMN = 'MLOCALE'
+
     loaded_data, column_names = load_csv("school_data.csv")
     print()
 
-    num_schools = count_schools(loaded_data, column_names, 'SCHNAM05')
-    num_schools_per_state = count_schools_for_each_state(loaded_data, column_names, school_name_column='SCHNAM05', state_column='LSTATE05')
-    num_schools_per_metro_centric_locale = count_schools_for_each_metro_centric_locale(loaded_data, column_names, school_name_column='SCHNAM05', metro_centric_locale_column='MLOCALE')
-    max_city, num_schools_in_max_city = find_city_with_max_schools(loaded_data, column_names, school_name_column='SCHNAM05', city_column='LCITY05')
-    num_cities_with_schools = count_cities_with_at_least_one_school(loaded_data, column_names, city_column='LCITY05')
+    num_schools = count_schools(
+        loaded_data, 
+        column_names, 
+        SCHOOL_NAME_COLUMN
+    )
+    num_schools_per_state = count_schools_for_each_state(
+        loaded_data, 
+        column_names, 
+        school_name_column=SCHOOL_NAME_COLUMN, 
+        state_column=STATE_COLUMN
+    )
+    num_schools_per_metro_centric_locale = count_schools_for_each_metro_centric_locale(
+        loaded_data, 
+        column_names, 
+        school_name_column=SCHOOL_NAME_COLUMN, 
+        metro_centric_locale_column=METRO_CENTRIC_LOCALE_COLUMN
+    )
+    max_city, num_schools_in_max_city = find_city_with_max_schools(
+        loaded_data, 
+        column_names, 
+        school_name_column=SCHOOL_NAME_COLUMN, 
+        city_column=CITY_COLUMN
+    )
+    num_cities_with_schools = count_cities_with_at_least_one_school(
+        loaded_data, 
+        column_names, 
+        city_column=CITY_COLUMN
+    )
 
     print(f'Total number of schools: {num_schools}.')
     print()
