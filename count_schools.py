@@ -1,4 +1,4 @@
-import csv, time, itertools
+import csv
 """
 Here is a layout of the records stored in school_data.csv
 
