@@ -184,7 +184,7 @@ def count_schools(
     """This function will count the total schools in the provided loaded data.
 
     This function makes assertions on whether the data passed in follows the proper schema. And then it
-    computes the number of distinct entries for the SCHNAM05 column.
+    gathers all of the distinct schools, specified by the school_name_column agument, and counts them.
     
     Parameters
     ----------
@@ -193,7 +193,7 @@ def count_schools(
     column_names: set[str]
         A set of strings that is supposed to represent each column in the data object. This is used to verify whether
         each line in the data is consistent.
-    school_column: str
+    school_name_column: str
         The column that represents the name of the school.
 
     Returns
@@ -231,9 +231,70 @@ def count_schools_for_each_state(
 ) -> dict[str, int]:
     """This function will count the total amount of schools in each state.
 
-    
-    """
+    This function makes assertions on whether the data passed in follows the proper schema. And then it
+    gathers all of the distinct schools for each state, specified by the school_name_column and state_column arguments,
+    within an auxillary dict named distinct_schools_in_state. The function finally iterates through 
+    distinct_schools_in_state, counting the number of distinct schools for each state and saving that information in
+    the dict that will be returned.
 
-loaded_data, schema = load_csv("school_data.csv")
-num_schools = count_schools(loaded_data, schema, 'SCHNAM05')
-print(num_schools)
+    Parameters
+    ----------
+    data: list[dict]
+        A list of dicts that is supposed to represent each row in the school_data.csv file.
+    column_names: set[str]
+        A set of strings that is supposed to represent each column in the data object. This is used to verify whether
+        each line in the data is consistent.
+    school_name_column: str
+        The column that represents the name of the school.
+    state_column:
+        The column that represents the state.
+    
+
+    Returns
+    -------
+    dict[str, int]:
+        A dict that maps the state to the number of schools within it.
+    """
+    if school_name_column not in column_names:
+        print(f'Error counting schools for each state: column {school_name_column} not found in inputted columns {column_names}.')
+        exit(1)
+    
+    if state_column not in column_names:
+        print(f'Error counting schools: column {state_column} not found in inputted columns {column_names}.')
+        exit(1)
+    
+    distinct_schools_in_state = dict()
+    column_set = set(column_names)
+
+    for line, entry in enumerate(data):
+        # Check here if all the required keys in the schema are present
+        if column_set != entry.keys():
+            key_list = list(entry.keys())
+            diff = list(entry.keys() ^ column_set)
+            print(
+                f'Error counting schools: Entry #{line} has keys {key_list} when the expected keys are '
+                f'{column_names}.\n'
+                f'Here is a diff for ease of reference: {diff}.'
+            )
+            exit(1)
+        
+        school = entry[school_name_column]
+        state = entry[state_column]
+        
+        if state not in distinct_schools_in_state:
+            distinct_schools_in_state[state] = set()
+        distinct_schools_in_state[state].add(school)
+
+    count_schools_in_state = dict()
+    for state, schools in distinct_schools_in_state.items():
+        count_schools_in_state[state] = len(schools)
+    
+    return count_schools_in_state
+
+
+loaded_data, column_names = load_csv("school_data.csv")
+num_schools = count_schools(loaded_data, column_names, 'SCHNAM05')
+num_schools_per_state = count_schools_for_each_state(loaded_data, column_names, school_name_column='SCHNAM05', state_column='LSTATE05')
+print(f'Total number of schools: {num_schools}')
+for state, count in num_schools_per_state.items():
+    print(f'Total number of schools in {state}: {count}')
