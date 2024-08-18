@@ -136,7 +136,7 @@ def load_csv(
     try:
         with open(filename, mode='r', encoding=encoding) as file:
             csv_reader = csv.reader(file)
-            print(f'File {filename} opened successfully')
+            print(f'File {filename} opened successfully.')
 
             # Gather a list with the column names
             column_names = next(csv_reader)
@@ -175,6 +175,7 @@ def load_csv(
         print(f'Error loading file: {e}')
         exit(1)
     
+    print(f'Loaded data in {filename} successfully.')
     return loaded_data, column_names
 
 
@@ -486,6 +487,7 @@ def print_counts() -> None:
     5. The number of unique cities that have at least one school in it.
     """
     loaded_data, column_names = load_csv("school_data.csv")
+    print()
 
     num_schools = count_schools(loaded_data, column_names, 'SCHNAM05')
     num_schools_per_state = count_schools_for_each_state(loaded_data, column_names, school_name_column='SCHNAM05', state_column='LSTATE05')
@@ -508,3 +510,5 @@ def print_counts() -> None:
     print()
 
     print(f'There are {num_cities_with_schools} cities with schools.')
+
+print_counts()
