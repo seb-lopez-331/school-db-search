@@ -1,5 +1,4 @@
 import csv, time, itertools
-
 """
 Here is a layout of the records stored in school_data.csv
 
@@ -94,14 +93,14 @@ Finally, here is a breakdown for STATUS05
 8 = School was closed on previous year's file but has reopened. 
 """
 
-def load_csv(filename, encoding='Windows-1252'):
-    """This function loads data from an inputted CSV file with the specified encoding,
-    defaulted to Windows-1252.
+def load_csv(filename: str, encoding: str = 'Windows-1252') -> tuple[list[dict[str[any]]], set[str]]:
+    """This function loads data from an inputted CSV file with the specified encoding, defaulted to Windows-1252.
 
-    If the file does not exist or if there are any errors associated with loading
-    the data, we exit from the script with an error message. The function returns 
-    a list of dicts that each represent a row in the data. Below is an example
-    of how the first row of data will be dynamically stored:
+    If the file does not exist or if there are any errors associated with loading the data, we exit from the script 
+    with an error message. The function returns a list of dicts that each represent a row in the data. It also 
+    returns a reference for the columns. 
+    
+    Below is an example of how the first row of data will be dynamically stored:
 
     {
         "NCESSCH": "010000200277",
@@ -126,8 +125,9 @@ def load_csv(filename, encoding='Windows-1252'):
     
     Returns
     -------
-    list
-        a list of dicts that represent each row
+    (list[dict[str, any]], set[str])
+        A tuple that contains a list of dicts that represent each row, and a set with strings that represent the names
+        of each column.
     """
     loaded_data = []
 
@@ -137,7 +137,7 @@ def load_csv(filename, encoding='Windows-1252'):
             print(f'File {filename} opened successfully')
 
             # Gather a list with the column names
-            column_names = next(csv_reader)
+            schema = next(csv_reader)
             
             # Construct entry objects that map column_name -> value
             # Below is an example:
@@ -157,7 +157,7 @@ def load_csv(filename, encoding='Windows-1252'):
             try:
                 for line, row in enumerate(csv_reader):
                     entry = {}
-                    for j, name in enumerate(column_names):
+                    for j, name in enumerate(schema):
                         entry[name] = row[j]
                     loaded_data.append(entry)
 
@@ -173,10 +173,28 @@ def load_csv(filename, encoding='Windows-1252'):
         print(f'Error loading file: {e}')
         exit(1)
     
-    return loaded_data
+    return loaded_data, set(schema)
 
 
-def count_schools(data):
+def count_schools(data: list[dict[str, any]], schema: set[str]) -> int:
+    """This function will count the total schools in the provided loaded data.
+
+    Firstly, this function makes assertions on whether the data passed in follows the proper schema. And then it
+    computes the number of distinct entries for the SCHNAM05 column.
+    
+    Parameters
+    ----------
+    data: list[dict]
+        A list of dicts that is supposed to represent each row in the school_data.csv file
+
+    Returns
+    -------
+    int:
+        The number of schools that the dataset has.
+    """
+    
+
+    
 
 
 loaded_data = load_csv("school_data.csv")
