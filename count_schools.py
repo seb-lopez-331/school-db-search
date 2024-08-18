@@ -127,7 +127,7 @@ def load_csv(
     
     Returns
     -------
-    (list[dict[str, any]], list[str])
+    tuple[list[dict[str, any]], list[str]]
         A tuple that contains a list of dicts that represent each row, and a list with strings that represent the names
         of each column.
     """
@@ -250,7 +250,6 @@ def count_schools_for_each_state(
     state_column:
         The column that represents the state.
     
-
     Returns
     -------
     dict[str, int]:
@@ -316,7 +315,6 @@ def count_schools_for_each_metro_centric_locale(
     metro_centric_locale_column:
         The column that represents the Metro-centric locale.
     
-
     Returns
     -------
     dict[str, int]:
@@ -423,7 +421,7 @@ def find_city_with_max_schools(
 
 
 def count_cities_with_at_least_one_school(
-    data: list[dict[str, any]], column_names: set[str], school_name_column: str, city_column: str
+    data: list[dict[str, any]], column_names: set[str], city_column: str
 ) -> int:
     """This function will find the number of distinct cities with at least one school.
 
@@ -437,8 +435,6 @@ def count_cities_with_at_least_one_school(
     column_names: set[str]
         A set of strings that is supposed to represent each column in the data object. This is used to verify whether
         each line in the data is consistent.
-    school_name_column: str
-        The column that represents the name of the school.
     city_column:
         The column that represents the city.
     
@@ -446,11 +442,7 @@ def count_cities_with_at_least_one_school(
     -------
     int:
         The number of distinct cities that have at least one school.
-    """
-    if school_name_column not in column_names:
-        print(f'Error counting schools for each state: column {school_name_column} not found in inputted columns {column_names}.')
-        exit(1)
-    
+    """    
     if city_column not in column_names:
         print(f'Error counting schools: column {city_column} not found in inputted columns {column_names}.')
         exit(1)
@@ -493,7 +485,7 @@ def print_counts() -> None:
     num_schools_per_state = count_schools_for_each_state(loaded_data, column_names, school_name_column='SCHNAM05', state_column='LSTATE05')
     num_schools_per_metro_centric_locale = count_schools_for_each_metro_centric_locale(loaded_data, column_names, school_name_column='SCHNAM05', metro_centric_locale_column='MLOCALE')
     max_city, num_schools_in_max_city = find_city_with_max_schools(loaded_data, column_names, school_name_column='SCHNAM05', city_column='LCITY05')
-    num_cities_with_schools = count_cities_with_at_least_one_school(loaded_data, column_names, school_name_column='SCHNAM05', city_column='LCITY05')
+    num_cities_with_schools = count_cities_with_at_least_one_school(loaded_data, column_names, city_column='LCITY05')
 
     print(f'Total number of schools: {num_schools}.')
     print()
