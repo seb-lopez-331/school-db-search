@@ -421,12 +421,67 @@ def find_city_with_max_schools(
     return (max_city, count_schools_in_max_city)
 
 
+def count_cities_with_at_least_one_school(
+    data: list[dict[str, any]], column_names: set[str], school_name_column: str, city_column: str
+) -> int:
+    """This function will find the number of distinct cities with at least one school.
+
+    This function makes assertions on whether the data passed in follows the proper schema. And then it adds a city
+    into an auxillary set cities_with_schools for each entry. The function finally returns the length of that set.
+
+    Parameters
+    ----------
+    data: list[dict]
+        A list of dicts that is supposed to represent each row in the school_data.csv file.
+    column_names: set[str]
+        A set of strings that is supposed to represent each column in the data object. This is used to verify whether
+        each line in the data is consistent.
+    school_name_column: str
+        The column that represents the name of the school.
+    city_column:
+        The column that represents the city.
+    
+    Returns
+    -------
+    int:
+        The number of distinct cities that have at least one school.
+    """
+    if school_name_column not in column_names:
+        print(f'Error counting schools for each state: column {school_name_column} not found in inputted columns {column_names}.')
+        exit(1)
+    
+    if city_column not in column_names:
+        print(f'Error counting schools: column {city_column} not found in inputted columns {column_names}.')
+        exit(1)
+    
+    cities_with_schools = set()
+    column_set = set(column_names)
+
+    for line, entry in enumerate(data):
+        # Check here if all the required keys in the schema are present
+        if column_set != entry.keys():
+            key_list = list(entry.keys())
+            diff = list(entry.keys() ^ column_set)
+            print(
+                f'Error counting schools: Entry #{line} has keys {key_list} when the expected keys are '
+                f'{column_names}.\n'
+                f'Here is a diff for ease of reference: {diff}.'
+            )
+            exit(1)
+        
+        city = entry[city_column]
+        cities_with_schools.add(city)
+
+    return len(cities_with_schools)
+    
+
 loaded_data, column_names = load_csv("school_data.csv")
 
 num_schools = count_schools(loaded_data, column_names, 'SCHNAM05')
 num_schools_per_state = count_schools_for_each_state(loaded_data, column_names, school_name_column='SCHNAM05', state_column='LSTATE05')
 num_schools_per_metro_centric_locale = count_schools_for_each_metro_centric_locale(loaded_data, column_names, school_name_column='SCHNAM05', metro_centric_locale_column='MLOCALE')
 max_city, num_schools_in_max_city = find_city_with_max_schools(loaded_data, column_names, school_name_column='SCHNAM05', city_column='LCITY05')
+num_cities_with_schools = count_cities_with_at_least_one_school(loaded_data, column_names, school_name_column='SCHNAM05', city_column='LCITY05')
 
 print(f'Total number of schools: {num_schools}.')
 print()
@@ -439,5 +494,7 @@ for metro_centric_locale, count in num_schools_per_metro_centric_locale.items():
     print(f'Total number of schools in Metro-centric locale {metro_centric_locale}: {count}.')
 print()
 
-print(f'City ${max_city} has the most schools at {num_schools_in_max_city}.')
+print(f'City {max_city} has the most schools at {num_schools_in_max_city}.')
 print()
+
+print(f'There are {num_cities_with_schools} cities with schools.')
