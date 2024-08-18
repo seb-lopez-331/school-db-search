@@ -1,5 +1,99 @@
 import csv, time, itertools
 
+"""
+Here is a layout of the records stored in school_data.csv
+
+Variable    Start       End         Field    Data 
+Name        Position    Position    Length   Type    Description      
+NCESSCH      01         12          12       AN      ID assigned by NCES to each school. 
+LEAID        13         19           7       AN      Unique Agency ID (NCES assigned) 
+LEANM05      20         79          60       AN      Name of Operating Agency 
+SCHNAM05     80         129         50       AN      School Name 
+LCITY05     130         159         30       AN      Location City Name 
+LSTATE05    160         161          2       AN      Location USPS State Abbreviation 
+LATCOD      162         170          9        N      Latitude 
+LONCOD      171         181         11        N      Longitude 
+MLOCALE     182         182          1       AN      Metro-centric locale code:
+ULOCALE     183         184          2       AN      Urban-centric locale code:
+STATUS05    185         185          1       AN      NCES code for the school status 
+
+
+Here is a breakdown of MLOCALE:
+1 = Large City: A principal city of a Metropolitan Core Based Statistical Area (CBSA), with the city having a 
+    population greater than or equal to 250,000.  
+
+2 = Mid-Size City: A principal city of a Metropolitan CBSA, with the city having a population less than 250,000.
+
+3 = Urban Fringe of a Large City: Any incorporated place, Census-designated place, or non-place territory within a 
+    Metropolitan CBSA  of a Large City and defined as urban by the Census Bureau. 
+
+4 = Urban Fringe of a Mid-Size City: Any incorporated place, Census-designated place, or non-place territory within a
+     CBSA of a Mid-Size City and defined as urban by the Census Bureau.  
+
+5 = Large Town: An incorporated place or Census designated place with a population greater than or equal to 25,000 and 
+    located outside a Metropolitan CBSA or inside a Micropolitan CBSA.  
+
+6 = Small Town: An incorporated place or Census designated place with a population less than 25,000 and greater than 
+    or equal to 2,500 and located outside a Metropolitan CBSA or inside a Micropolitan CBSA.  
+
+7 = Rural, outside CBSA: Any incorporated place, Census-designated place, or non-place territory not within a 
+    Metropolitan CBSA or within a Micropolitan CBSA and defined as rural by the Census Bureau.  
+
+8 = Rural, inside CBSA: Any incorporated place, Census-designated place, or non-place territory within a 
+    Metropolitan CBSA and defined as rural by the Census Bureau. 
+
+    
+Here is a breakdown of ULOCALE:
+11 = City: Large: Territory inside an urbanized area and inside a principal city with population of 250,000 or more.
+
+12 = City: Midsize: Territory inside an urbanized area and inside a principal city with population less than 250,000 
+    and  greater than or equal to 100,000. 
+
+13 = City: Small: Territory inside an urbanized area and inside a principal city with population less than 100,000. 
+
+21 = Suburb: Large: Territory outside a principal city and inside an urbanized area with population of 250,000 or more. 
+
+22 = Suburb: Midsize: Territory outside a principal city and inside an urbanized area with population less than 250,000 
+    and greater than or equal to 100,000. 
+    
+23 = Suburb: Small: Territory outside a principal city and inside an urbanized area with population less than 100,000. 
+
+31 = Town: Fringe: Territory inside an urban cluster that is less than or equal to 10 miles from an urbanized area. 
+
+32 = Town: Distant: Territory inside an urban cluster that is more than 10 miles and less than or equal to 35 miles 
+    from an urbanized area. 
+    
+33 = Town: Remote: Territory inside an urban cluster that is more than 35 miles of an urbanized area. 
+
+41 = Rural: Fringe: Census-defined rural territory that is less than or equal to 5 miles from an urbanized area, as well 
+    as rural territory that is less than or equal to 2.5 miles from an urban cluster.  
+    
+42 = Rural: Distant: Census-defined rural territory that is more than 5 miles but less than or equal to 25 miles from 
+    an urbanized area, as well as rural territory that is more than 2.5 miles but less than or equal to 10 miles from 
+    an urban cluster. 
+    
+43 = Rural: Remote: Census-defined rural territory that is more than 25 miles from an urbanized area and is also more 
+    than 10 miles from an urban cluster.
+
+    
+Finally, here is a breakdown for STATUS05
+1 = School was operational at the time of the last report and is currently operational. 
+
+2 = School has closed since the time of the last report. 
+
+3 = School has been opened since the time of the last report. 
+
+4 = School was operational at the time of the last report but was not on the CCD list at that time. 
+
+5 = School was listed in previous year's CCD school universe as being affiliated with a different education agency. 
+
+6 = School is temporarily closed and may reopen within 3 years. 
+
+7 = School is scheduled to be operational within 2 years. 
+
+8 = School was closed on previous year's file but has reopened. 
+"""
+
 def load_csv(filename, encoding='Windows-1252'):
     """This function loads data from an inputted CSV file with the specified encoding,
     defaulted to Windows-1252.
@@ -44,7 +138,6 @@ def load_csv(filename, encoding='Windows-1252'):
 
             # Gather a list with the column names
             column_names = next(csv_reader)
-            print(f'Column names: {column_names}')
             
             # Construct entry objects that map column_name -> value
             # Below is an example:
@@ -63,7 +156,6 @@ def load_csv(filename, encoding='Windows-1252'):
             # }
             try:
                 for line, row in enumerate(csv_reader):
-                    print(f'Parsing row {line}')
                     entry = {}
                     for j, name in enumerate(column_names):
                         entry[name] = row[j]
@@ -82,6 +174,9 @@ def load_csv(filename, encoding='Windows-1252'):
         exit(1)
     
     return loaded_data
+
+
+def count_schools(data):
 
 
 loaded_data = load_csv("school_data.csv")
