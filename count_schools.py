@@ -93,7 +93,9 @@ Finally, here is a breakdown for STATUS05
 8 = School was closed on previous year's file but has reopened. 
 """
 
-def load_csv(filename: str, encoding: str = 'Windows-1252') -> tuple[list[dict[str, any]], set[str]]:
+def load_csv(
+    filename: str, encoding: str = 'Windows-1252'
+) -> tuple[list[dict[str, any]], set[str]]:
     """This function loads data from an inputted CSV file with the specified encoding, defaulted to Windows-1252.
 
     If the file does not exist or if there are any errors associated with loading the data, we exit from the script 
@@ -176,22 +178,33 @@ def load_csv(filename: str, encoding: str = 'Windows-1252') -> tuple[list[dict[s
     return loaded_data, set(column_names)
 
 
-def count_schools(data: list[dict[str, any]], column_names: set[str]) -> int:
+def count_schools(
+    data: list[dict[str, any]], column_names: set[str], school_name_column: str
+) -> int:
     """This function will count the total schools in the provided loaded data.
 
-    Firstly, this function makes assertions on whether the data passed in follows the proper schema. And then it
+    This function makes assertions on whether the data passed in follows the proper schema. And then it
     computes the number of distinct entries for the SCHNAM05 column.
     
     Parameters
     ----------
     data: list[dict]
-        A list of dicts that is supposed to represent each row in the school_data.csv file
+        A list of dicts that is supposed to represent each row in the school_data.csv file.
+    column_names: set[str]
+        A set of strings that is supposed to represent each column in the data object. This is used to verify whether
+        each line in the data is consistent.
+    school_column: str
+        The column that represents the name of the school.
 
     Returns
     -------
     int:
         The number of schools that the dataset has.
     """
+    if school_name_column not in column_names:
+        print(f'Error counting schools: column {school_name_column} not found in inputted columns {column_names}.')
+        exit(1)
+
     distinct_schools = set()
 
     for line, entry in enumerate(data):
@@ -201,11 +214,19 @@ def count_schools(data: list[dict[str, any]], column_names: set[str]) -> int:
             print(f'Error counting schools: Entry {entry} in line {line} is missing the required keys: {missing_keys}.')
             exit(1)
         
-        school = entry['SCHNAM05']
+        school = entry[school_name_column]
         distinct_schools.add(school)
     
     return len(distinct_schools)
         
+
+def count_schools_for_each_state(
+    data: list[dict[str, any]], column_names: set[str], school_name_column: str, state_column: str
+) -> dict[str, int]:
+    """This function will count the total amount of schools in each state.
+
+    
+    """
 
 loaded_data, schema = load_csv("school_data.csv")
 num_schools = count_schools(loaded_data, schema)
