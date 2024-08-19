@@ -1,4 +1,4 @@
-import csv
+import csv, time
 
 """
 We can use a predefined list of states, cities, and schools
@@ -9,11 +9,7 @@ CITY_COLUMN = 'LCITY05'
 STATE_COLUMN = 'LSTATE05'
 
 # We use these as stop words because we are looking for schools anyways
-STOP_WORDS = set([
-    'school', 
-    'academy', 
-    'institute'
-])
+STOP_WORDS = {'school', 'academy', 'institute'}
 
 def load_csv(filename: str, encoding: str = 'Windows-1252') -> tuple[list[dict[str, any]], list[str]]:
     """This function loads data from an inputted CSV file with the specified encoding, defaulted to Windows-1252.
@@ -99,32 +95,7 @@ def load_csv(filename: str, encoding: str = 'Windows-1252') -> tuple[list[dict[s
     return loaded_data, column_names
 
 
-def find_distinct(data: dict[str, any], column_names: list[str], column: str) -> list[str]:
-    if column not in column_names:
-        print(f'Error counting schools: column {column} not found in inputted columns {column_names}.')
-        exit(1)
-    
-    distinct = set()
-    column_set = set(column_names)
-
-    for line, entry in enumerate(data):
-        # Check here if all the required keys in the schema are present
-        if column_set != entry.keys():
-            key_list = list(entry.keys())
-            diff = list(entry.keys() ^ column_set)
-            print(
-                f'Error counting schools: Entry #{line} has keys {key_list} when the expected keys are '
-                f'{column_names}.\n'
-                f'Here is a diff for ease of reference: {diff}.'
-            )
-            exit(1)
-        
-        distinct.add(entry[column])
-
-    return distinct
-
-
-def tokenize(text: str) -> list[str]:
+def tokenize(text: str) -> set[str]:
     # We want to replace all punctuation characters with space
     punctuation = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
     text = text.lower()
@@ -132,66 +103,68 @@ def tokenize(text: str) -> list[str]:
     text = ''.join(char for char in text if char.isalnum() or char.isspace())
     tokens = text.split()
     filtered = filter(lambda word: word not in STOP_WORDS, tokens)
-    return list(filtered)
+    return set(filtered)
 
 
-def compute_exact_match(entry: dict[str, any], keywords: list[str]) -> float:
-    school_name_tokens = tokenize(entry[SCHOOL_NAME_COLUMN])
-    city_tokens = tokenize(entry[CITY_COLUMN])
-    state_token = entry[STATE_COLUMN].lower()
+def batch_tokenize(data: list[dict[str, any]]) -> list[dict[str, set[str]]]:
+    tokenized_data = []
+    for entry in data:
+        tokens = {
+            SCHOOL_NAME_COLUMN: tokenize(entry[SCHOOL_NAME_COLUMN]),
+            CITY_COLUMN: tokenize(entry[CITY_COLUMN]),
+            STATE_COLUMN: tokenize(entry[STATE_COLUMN])
+        }
+        tokenized_data.append(tokens)
+    return tokenized_data
 
-    keywords_set = set(keywords)
     
-    return 1.0 if (keywords_set.issubset(school_name_tokens) or
-                 keywords_set.issubset(city_tokens) or
-                 keywords_set.issubset([state_token])) else 0.0
-
-
-
-def compute_partial_match(entry: dict[str, any], keywords: list[str]) -> float:
-    school_name_tokens = tokenize(entry[SCHOOL_NAME_COLUMN])
-    city_tokens = tokenize(entry[CITY_COLUMN])
-    state_token = entry[STATE_COLUMN].lower()
-
-    all_tokens = set(school_name_tokens + city_tokens + [state_token])
-
-    total_matches = 0
-    for word in keywords:
-        if word in all_tokens:
-            total_matches += 1
+def compute_exact_match(tokens: dict[str, set[str]], keywords: set[str]) -> float:
+    school_name_tokens = tokens[SCHOOL_NAME_COLUMN]
+    city_tokens = tokens[CITY_COLUMN]
+    state_tokens = tokens[STATE_COLUMN]
     
-    return float(total_matches) / len(keywords)
+    return 1.0 if (keywords.issubset(school_name_tokens) or
+                 keywords.issubset(city_tokens) or
+                 keywords.issubset(state_tokens)) else 0.0
 
 
-def compute_city_match(entry: dict[str, any], keywords: list[str]) -> float:
-    city_tokens = set(tokenize(entry[CITY_COLUMN]))
+def compute_partial_match(tokens: dict[str, set[str]], keywords: set[str]) -> float:
+    school_name_tokens = tokens[SCHOOL_NAME_COLUMN]
+    city_tokens = tokens[CITY_COLUMN]
+    state_tokens = tokens[STATE_COLUMN]
 
-    total_matches = 0
-    for word in keywords:
-        if word in city_tokens:
-            total_matches += 1
+    all_tokens = school_name_tokens | city_tokens | state_tokens
+    total_matches = sum(1 for word in keywords if word in all_tokens)
     
-    return float(total_matches) / len(keywords)
+    return total_matches / len(keywords)
 
 
-def compute_rank(entry: dict[str, any], keywords: list[str]) -> float:
-    exact_match = compute_exact_match(entry, keywords)
-    partial_match = compute_partial_match(entry, keywords)
-    location_score = compute_city_match(entry, keywords)
+def compute_city_match(tokens: dict[str, set[str]], keywords: set[str]) -> float:
+    city_tokens = tokens[CITY_COLUMN]
+    total_matches = sum(1 for word in keywords if word in city_tokens)
+    return total_matches / len(keywords)
+
+
+def compute_rank(tokens: dict[str, set[str]], keywords: set[str]) -> float:
+    exact_match = compute_exact_match(tokens, keywords)
+    partial_match = compute_partial_match(tokens, keywords)
+    location_score = compute_city_match(tokens, keywords)
     final_score = 0.5*exact_match + 0.3*partial_match + 0.05*location_score
     return final_score
     
 
 loaded_data, column_names = load_csv("school_data.csv")
+tokenized_data = batch_tokenize(loaded_data)
 print()
 
 
 def search_schools(query: str, n: int = 3) -> list[dict[str, any]]:
     keywords = tokenize(query)
     top_results = []
+    start_time = time.time()
 
-    for entry in loaded_data:
-        score = compute_rank(entry, keywords)
+    for entry, tokens in zip(loaded_data, tokenized_data):
+        score = compute_rank(tokens, keywords)
         
         if len(top_results) < n:
             top_results.append({'entry': entry, 'score': score})
@@ -208,12 +181,25 @@ def search_schools(query: str, n: int = 3) -> list[dict[str, any]]:
             top_results.pop(min_index)
             top_results.append({'entry': entry, 'score': score})
     
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+
     top_results.sort(key=lambda result: result['score'])
 
-    print('Search results for query: ', query)
-    for result in top_results[::-1]:
+    print(f'Results for: "{query}" (search took: {elapsed_time:.3f}s)')
+    for i, result in enumerate(top_results[::-1]):
+        if result['score'] == 0:
+            break
         entry = result['entry']
         school = entry[SCHOOL_NAME_COLUMN]
         city = entry[CITY_COLUMN]
         state = entry[STATE_COLUMN]
-        print(f'{school}, {city}, {state}, {result["score"]}')
+        print(f'{i + 1}. {school}')
+        print(f'   {city}, {state}')
+
+search_schools("elementary school highland park")
+search_schools("jefferson belleville")
+search_schools("riverside school 44")
+search_schools("granada charter school")
+search_schools("foley high alabama")
+search_schools("KUSKOKWIM")
