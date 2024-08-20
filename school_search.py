@@ -1,105 +1,41 @@
 import csv, time
 
-"""
-We can use a predefined list of states, cities, and schools
-"""
 # Constants
 SCHOOL_NAME_COLUMN = 'SCHNAM05'
 CITY_COLUMN = 'LCITY05'
 STATE_COLUMN = 'LSTATE05'
+PUNCTUATION = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 
 # We use these as stop words because we are looking for schools anyways
 STOP_WORDS = {'school', 'academy', 'institute'}
 
-def load_csv(filename: str, encoding: str = 'Windows-1252') -> tuple[list[dict[str, any]], list[str]]:
-    """This function loads data from an inputted CSV file with the specified encoding, defaulted to Windows-1252.
+# These weights are configurable
+EXACT_MATCH_WEIGHT = 0.5
+PARTIAL_MATCH_WEIGHT = 0.3
+LOCATION_MATCH_WEIGHT = 0.05
 
-    If the file does not exist or if there are any errors associated with loading the data, we exit from the script 
-    with an error message. The function returns a list of dicts that each represent a row in the data. It also 
-    returns a reference for the columns. 
-    
-    Below is an example of how the first row of data will be dynamically stored:
-
-    {
-        "NCESSCH": "010000200277",
-        "LEAID": "0100002",
-        "LEANM05": "ALABAMA YOUTH SERVICES",
-        "SCHNAM05": "SEQUOYAH SCHOOL - CHALKVILLE CAMPUS",
-        "LCITY05": "PINSON",
-        "LSTATE05": "AL",
-        "LATCOD": "33.674697",
-        "LONCOD": "-86.627775",
-        "MLOCALE": "3",
-        "ULOCALE": "41",
-        "status05": "1"
-    }
-
-    Parameters
-    ----------
-    filename: str
-        The name of the CSV file
-    encoding: str
-        The encoding to use for loading the CSV file
-    
-    Returns
-    -------
-    tuple[list[dict[str, any]], list[str]]
-        A tuple that contains a list of dicts that represent each row, and a list with strings that represent the names
-        of each column.
-    """
+def load_csv(filename: str, encoding: str = 'Windows-1252') -> list[dict[str, any]]:
     loaded_data = []
 
-    try:
-        with open(filename, mode='r', encoding=encoding) as file:
-            csv_reader = csv.reader(file)
-            print(f'File {filename} opened successfully.')
+    with open(filename, mode='r', encoding=encoding) as file:
+        csv_reader = csv.reader(file)
+        print(f'File {filename} opened successfully.')
 
-            # Gather a list with the column names
-            column_names = next(csv_reader)
-            
-            # Construct entry objects that map column_name -> value
-            # Below is an example:
-            # {
-            #     "NCESSCH": "010000200277",
-            #     "LEAID": "0100002",
-            #     "LEANM05": "ALABAMA YOUTH SERVICES",
-            #     "SCHNAM05": "SEQUOYAH SCHOOL - CHALKVILLE CAMPUS",
-            #     "LCITY05": "PINSON",
-            #     "LSTATE05": "AL",
-            #     "LATCOD": "33.674697",
-            #     "LONCOD": "-86.627775",
-            #     "MLOCALE": "3",
-            #     "ULOCALE": "41",
-            #     "status05": "1"
-            # }
-            try:
-                for line, row in enumerate(csv_reader):
-                    entry = {}
-                    for j, name in enumerate(column_names):
-                        entry[name] = row[j]
-                    loaded_data.append(entry)
+        column_names = next(csv_reader)
+        for row in csv_reader:
+            entry = {}
+            for index, name in enumerate(column_names):
+                entry[name] = row[index]
+            loaded_data.append(entry)
 
-            except UnicodeDecodeError as e:
-                print(f'Error parsing data file on line {line + 1}. The encoding {encoding} is incorrect here: {e}')
-                exit(1)
-
-            except IndexError as e:
-                print(f'Error parsing data file on line {line}. This is likely due to mismatched numbers of columns on a row with the schema: {e}')
-                exit(1)
-
-    except FileNotFoundError | PermissionError | OSError as e:
-        print(f'Error loading file: {e}')
-        exit(1)
-    
     print(f'Loaded data in {filename} successfully.')
-    return loaded_data, column_names
+    return loaded_data
 
 
 def tokenize(text: str) -> set[str]:
     # We want to replace all punctuation characters with space
-    punctuation = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
     text = text.lower()
-    text = ''.join(' ' if char in punctuation else char for char in text)
+    text = ''.join(' ' if char in PUNCTUATION else char for char in text)
     text = ''.join(char for char in text if char.isalnum() or char.isspace())
     tokens = text.split()
     filtered = filter(lambda word: word not in STOP_WORDS, tokens)
@@ -148,12 +84,11 @@ def compute_city_match(tokens: dict[str, set[str]], keywords: set[str]) -> float
 def compute_rank(tokens: dict[str, set[str]], keywords: set[str]) -> float:
     exact_match = compute_exact_match(tokens, keywords)
     partial_match = compute_partial_match(tokens, keywords)
-    location_score = compute_city_match(tokens, keywords)
-    final_score = 0.5*exact_match + 0.3*partial_match + 0.05*location_score
-    return final_score
+    location_match = compute_city_match(tokens, keywords)
+    return EXACT_MATCH_WEIGHT*exact_match + PARTIAL_MATCH_WEIGHT*partial_match + LOCATION_MATCH_WEIGHT*location_match
     
 
-loaded_data, column_names = load_csv("school_data.csv")
+loaded_data = load_csv("school_data.csv")
 tokenized_data = batch_tokenize(loaded_data)
 print()
 
