@@ -12,7 +12,26 @@ STOP_WORDS = {'school', 'academy', 'institute'}
 # These weights are configurable
 EXACT_MATCH_WEIGHT = 0.5
 PARTIAL_MATCH_WEIGHT = 0.3
-LOCATION_MATCH_WEIGHT = 0.05
+CITY_MATCH_WEIGHT = 0.05
+STATE_MATCH_WEIGHT = 0.01
+
+# Allows the school_search script to be searchable by state
+STATE_ABBREVIATION = {
+    'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR',
+    'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE',
+    'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI', 'Idaho': 'ID',
+    'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS',
+    'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+    'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS',
+    'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV',
+    'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY',
+    'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK',
+    'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+    'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT',
+    'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV',
+    'Wisconsin': 'WI', 'Wyoming': 'WY'
+}
+
 
 def load_csv(filename: str, encoding: str = 'Windows-1252') -> list[dict[str, any]]:
     loaded_data = []
@@ -32,9 +51,17 @@ def load_csv(filename: str, encoding: str = 'Windows-1252') -> list[dict[str, an
     return loaded_data
 
 
+def abbreviate_states(text: str) -> str:
+    for full_state in STATE_ABBREVIATION:
+        if full_state.lower() in text:
+            text = text.replace(full_state, STATE_ABBREVIATION[full_state])
+    return text
+
+
 def tokenize(text: str) -> set[str]:
     # We want to replace all punctuation characters with space
     text = text.lower()
+    text = abbreviate_states(text)
     text = ''.join(' ' if char in PUNCTUATION else char for char in text)
     text = ''.join(char for char in text if char.isalnum() or char.isspace())
     tokens = text.split()
@@ -81,11 +108,21 @@ def compute_city_match(tokens: dict[str, set[str]], keywords: set[str]) -> float
     return total_matches / len(keywords)
 
 
+def compute_state_match(tokens: dict[str, set[str]], keywords: set[str]) -> float:
+    state_tokens = tokens[STATE_COLUMN]
+    total_matches = sum(1 for word in keywords if word in state_tokens)
+    return total_matches / len(keywords)
+
+
 def compute_rank(tokens: dict[str, set[str]], keywords: set[str]) -> float:
     exact_match = compute_exact_match(tokens, keywords)
     partial_match = compute_partial_match(tokens, keywords)
-    location_match = compute_city_match(tokens, keywords)
-    return EXACT_MATCH_WEIGHT*exact_match + PARTIAL_MATCH_WEIGHT*partial_match + LOCATION_MATCH_WEIGHT*location_match
+    city_match = compute_city_match(tokens, keywords)
+    state_match = compute_state_match(tokens, keywords)
+    return EXACT_MATCH_WEIGHT * exact_match + \
+        PARTIAL_MATCH_WEIGHT * partial_match + \
+        CITY_MATCH_WEIGHT * city_match + \
+        STATE_MATCH_WEIGHT * state_match
     
 
 loaded_data = load_csv("school_data.csv")
@@ -138,3 +175,4 @@ search_schools("riverside school 44")
 search_schools("granada charter school")
 search_schools("foley high alabama")
 search_schools("KUSKOKWIM")
+search_schools("texas")
