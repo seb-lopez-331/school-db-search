@@ -15,7 +15,7 @@ PARTIAL_MATCH_WEIGHT = 0.3
 CITY_MATCH_WEIGHT = 0.05
 STATE_MATCH_WEIGHT = 0.01
 
-# Allows the school_search script to be searchable by state
+# Allows the school_search script to search by state
 STATE_ABBREVIATION = {
     'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR',
     'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE',
@@ -58,10 +58,11 @@ def abbreviate_states(text: str) -> str:
     return text
 
 
-def tokenize(text: str) -> set[str]:
+def tokenize(text: str, is_query_text: bool = False) -> set[str]:
     # We want to replace all punctuation characters with space
     text = text.lower()
-    text = abbreviate_states(text)
+    if is_query_text:
+        text = abbreviate_states(text)
     text = ''.join(' ' if char in PUNCTUATION else char for char in text)
     text = ''.join(char for char in text if char.isalnum() or char.isspace())
     tokens = text.split()
@@ -130,9 +131,9 @@ tokenized_data = batch_tokenize(loaded_data)
 print()
 
 
-def search_schools(query: str, n: int = 3) -> list[dict[str, any]]:
-    keywords = tokenize(query)
+def search_schools(query: str, n: int = 3) -> None:
     top_results = []
+    keywords = tokenize(query, is_query_text=True)
     start_time = time.time()
 
     for entry, tokens in zip(loaded_data, tokenized_data):
@@ -169,10 +170,23 @@ def search_schools(query: str, n: int = 3) -> list[dict[str, any]]:
         print(f'{i + 1}. {school}')
         print(f'   {city}, {state}')
 
-search_schools("elementary school highland park")
-search_schools("jefferson belleville")
-search_schools("riverside school 44")
-search_schools("granada charter school")
-search_schools("foley high alabama")
-search_schools("KUSKOKWIM")
-search_schools("texas")
+option = input('Please specify here if you wish to supply your own queries (Y) or use the built-in queries here (N).\n> ')
+while option not in ['N', 'Y']:
+    option = input(f'{option} is not a valid option. Would you like to supply your own queries? Specify Y if yes, or N if no.\n> ')
+
+if option == 'N':
+    search_schools("elementary school highland park")
+    search_schools("jefferson belleville")
+    search_schools("riverside school 44")
+    search_schools("granada charter school")
+    search_schools("foley high alabama")
+    search_schools("KUSKOKWIM")
+else:
+    keep_going = 'Y'
+    while keep_going == 'Y':
+        query = input('Please specify your query here\n> ')
+        search_schools(query)
+        keep_going = input('Would you like to continue (Y/N)?\n> ')
+        while keep_going not in ['N', 'Y']:
+            keep_going = input(f'{keep_going} is not a valid option. Would you like to continue? Specify Y if yes, or N if no.\n> ')
+

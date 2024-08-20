@@ -1,6 +1,8 @@
 import csv
 """
-Here is a layout of the records stored in school_data.csv
+I have taken the liberty to write documentation here for my own ease of reference.
+
+Here is a layout of the records stored in school_data.csv:
 
 Variable    Start       End         Field    Data 
 Name        Position    Position    Length   Type    Description      
@@ -182,7 +184,7 @@ def load_csv(
 def count_schools(
     data: list[dict[str, any]], column_names: list[str], school_name_column: str
 ) -> int:
-    """This function will count the total schools in the provided loaded data.
+    """This function counts the total schools in the provided loaded data.
 
     This function makes assertions on whether the data passed in follows the proper schema. And then it
     gathers all of the distinct schools, specified by the school_name_column agument, and counts them.
@@ -230,7 +232,7 @@ def count_schools(
 def count_schools_for_each_state(
     data: list[dict[str, any]], column_names: set[str], school_name_column: str, state_column: str
 ) -> dict[str, int]:
-    """This function will count the total amount of schools in each state.
+    """This function counts the total amount of schools in each state.
 
     This function makes assertions on whether the data passed in follows the proper schema. And then it
     gathers all of the distinct schools for each state, specified by the school_name_column and state_column arguments,
@@ -295,7 +297,7 @@ def count_schools_for_each_state(
 def count_schools_for_each_metro_centric_locale(
     data: list[dict[str, any]], column_names: set[str], school_name_column: str, metro_centric_locale_column: str
 ) -> dict[str, int]:
-    """This function will count the total amount of schools in each Metro-centric locale.
+    """This function counts the total amount of schools in each Metro-centric locale.
 
     This function makes assertions on whether the data passed in follows the proper schema. And then it
     gathers all of the distinct schools for each state, specified by the school_name_column and 
@@ -360,7 +362,7 @@ def count_schools_for_each_metro_centric_locale(
 def find_city_with_max_schools(
     data: list[dict[str, any]], column_names: set[str], school_name_column: str, city_column: str
 ) -> tuple[str, int]:
-    """This function will find the city with the maximum number of schools.
+    """This function finds the city with the maximum number of schools.
 
     This function makes assertions on whether the data passed in follows the proper schema. And then it
     gathers all of the distinct schools for each city, specified by the school_name_column and city_column arguments,
@@ -423,7 +425,7 @@ def find_city_with_max_schools(
 def count_cities_with_at_least_one_school(
     data: list[dict[str, any]], column_names: set[str], city_column: str
 ) -> int:
-    """This function will find the number of distinct cities with at least one school.
+    """This function finds the number of distinct cities with at least one school.
 
     This function makes assertions on whether the data passed in follows the proper schema. And then it adds a city
     into an auxillary set cities_with_schools for each entry. The function finally returns the length of that set.
@@ -515,20 +517,22 @@ def print_counts() -> None:
         city_column=CITY_COLUMN
     )
 
-    print(f'Total number of schools: {num_schools}.')
+    print(f'Total Schools: {num_schools}')
     print()
 
+    print('Schools by State:')
     for state, count in num_schools_per_state.items():
-        print(f'Total number of schools in {state}: {count}.')
+        print(f'   {state}: {count}')
     print()
 
+    print('Schools by Metro-centric locale:')
     for metro_centric_locale, count in num_schools_per_metro_centric_locale.items():
-        print(f'Total number of schools in Metro-centric locale {metro_centric_locale}: {count}.')
+        print(f'   {metro_centric_locale}: {count}')
     print()
 
-    print(f'City {max_city} has the most schools at {num_schools_in_max_city}.')
+    print(f'City with most schools: {max_city} ({num_schools_in_max_city} schools)')
     print()
 
-    print(f'There are {num_cities_with_schools} cities with schools.')
+    print(f'Unique cities with at least one school: {num_cities_with_schools}')
 
 print_counts()
